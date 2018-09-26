@@ -151,7 +151,7 @@ app.post("/dropzone", singleUpload("file"), validateFile, singleFileUpload);
 // route: dropzone multiple file upload
 app.post(
   "/multiple-dropzone",
-  singleUpload("files"),
+  multipleUpload("files"),
   validateFile,
   multipleFileUpload
 );
