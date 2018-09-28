@@ -1,6 +1,8 @@
 import React, { Component, Fragment } from "react";
 import axios from "axios";
 
+import Message from "./Message";
+
 export class SimpleUpload extends Component {
   state = {
     file: "",
@@ -11,11 +13,12 @@ export class SimpleUpload extends Component {
 
   // Validate File Method
   validateFile = () => {
+    //return ""; // testing for server side error
+
     const { file } = this.state;
 
+    const MAX_SIZE = 5000000; //5MB
     const allowedTypes = ["image/jpeg", "image/png", "image/gif"];
-
-    const MAX_SIZE = 200000;
 
     // check if images size too large return true
     const tooLarge = file.size > MAX_SIZE;
@@ -48,7 +51,6 @@ export class SimpleUpload extends Component {
   // Submit Form Method
   _onSubmit = async event => {
     event.preventDefault();
-    //console.log(this.state);
 
     try {
       const formData = new FormData();
@@ -78,11 +80,8 @@ export class SimpleUpload extends Component {
     const { file, message, error, uploadedFiles } = this.state;
     return (
       <form encType="multipart/form-data" onSubmit={this._onSubmit}>
-        {message && (
-          <div className={`card-panel ${error ? "red" : "green"}`}>
-            <span className="white-text">{message}</span>
-          </div>
-        )}
+        {message && <Message message={message} error={error} />}
+
         <div className="input-field col s12">
           <div className="btn waves-effect waves-light btn-large  btn-upload">
             <span className="valign-wrapper">

@@ -2,6 +2,8 @@ import React, { Component, Fragment } from "react";
 import axios from "axios";
 import _ from "lodash";
 
+import Message from "./Message";
+
 export class MultipleUpload extends Component {
   state = {
     files: [],
@@ -15,7 +17,7 @@ export class MultipleUpload extends Component {
   validateFile = file => {
     //return ""; // testing for server side error
 
-    const MAX_SIZE = 200000;
+    const MAX_SIZE = 5000000; // 5MB
     const allowedTypes = ["image/jpeg", "image/png", "image/gif"];
 
     // check if images size too large return true
@@ -104,13 +106,11 @@ export class MultipleUpload extends Component {
 
   render() {
     const { files, message, error, uploadedFiles } = this.state;
+
     return (
       <form encType="multipart/form-data" onSubmit={this._onSubmit}>
-        {message && (
-          <div className={`card-panel ${error ? "red" : "green"}`}>
-            <span className="white-text">{message}</span>
-          </div>
-        )}
+        {message && <Message message={message} error={error} />}
+
         <div className="input-field col s12">
           <div className="btn waves-effect waves-light btn-large btn-upload blue darken-1">
             <span className="valign-wrapper">

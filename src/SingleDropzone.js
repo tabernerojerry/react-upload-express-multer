@@ -2,6 +2,7 @@ import React, { Component, Fragment } from "react";
 import axios from "axios";
 
 import Progress from "./Progress";
+import Message from "./Message";
 
 export class SingleDropzone extends Component {
   state = {
@@ -10,8 +11,7 @@ export class SingleDropzone extends Component {
     message: "",
     error: false,
     uploadedFiles: [],
-    progress: 0,
-    visible: false
+    progress: 0
   };
 
   // Validate File Method
@@ -20,9 +20,8 @@ export class SingleDropzone extends Component {
 
     const { file } = this.state;
 
+    const MAX_SIZE = 5000000; // 5MB
     const allowedTypes = ["image/jpeg", "image/png", "image/gif"];
-
-    const MAX_SIZE = 200000;
 
     // check if images size too large return true
     const tooLarge = file.size > MAX_SIZE;
@@ -53,14 +52,10 @@ export class SingleDropzone extends Component {
   // Input Change & Submit Form Method
   _onChange = async ({ target: { name, files } }) => {
     await this.setState({
-      [name]: files[0],
-      visible: true
+      [name]: files[0]
     });
-    //console.log(this.state.file);
 
-    // Auto hide error message in 5seconds
-    setTimeout(() => this.setState({ visible: false }), 5000);
-
+    // skip process if invalid file
     if (!this.validateFile()) return;
 
     try {
@@ -73,9 +68,11 @@ export class SingleDropzone extends Component {
       // API Call using axios
       const {
         data: { file }
-      } = await axios.post("/dropzone", formData, {
-        onUploadProgress: e =>
-          this.setState({ progress: Math.round((e.loaded * 100) / e.total) })
+      } = await axios.post("/single-dropzone", formData, {
+        onUploadProgress: event =>
+          this.setState({
+            progress: Math.floor((event.loaded * 100) / event.total)
+          })
       });
       //console.log(file);
 
@@ -87,8 +84,6 @@ export class SingleDropzone extends Component {
         error: false,
         message: "File has been succussfully uploaded!"
       });
-
-      //console.log("uploadedFiles: ", this.state.uploadedFiles);
     } catch (err) {
       this.setState({
         uploading: false,
@@ -100,21 +95,16 @@ export class SingleDropzone extends Component {
 
   render() {
     const {
+      file,
       uploading,
       message,
       error,
       uploadedFiles,
-      progress,
-      visible
+      progress
     } = this.state;
     return (
       <form encType="multipart/form-data">
-        {visible &&
-          message && (
-            <div className={`card-panel ${error ? "red" : "green"}`}>
-              <span className="white-text">{message}</span>
-            </div>
-          )}
+        {message && <Message message={message} error={error} />}
 
         <div className="dropzone z-depth-2">
           <input
@@ -128,7 +118,7 @@ export class SingleDropzone extends Component {
             <p className="call-to-action">Single File Drag and Drop Upload </p>
           )}
 
-          {uploading && <Progress progress={progress} />}
+          {uploading && <Progress progress={progress} fileName={file.name} />}
         </div>
 
         {uploadedFiles.length > 0 && (

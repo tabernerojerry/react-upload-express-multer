@@ -10,14 +10,12 @@ const app = express();
 // Static Express Middleware
 app.use("/public", express.static(path.join(__dirname, "public")));
 
-// File max size
-const MAX_SIZE = 200000;
+// File max size 5MB
+const MAX_SIZE = 5000000;
 
 // Filter File Types
 const fileFilter = (req, file, next) => {
   const allowedTypes = ["image/jpeg", "image/png", "image/gif"];
-
-  //console.log(file);
 
   if (!allowedTypes.includes(file.mimetype)) {
     const error = new Error("Wrong file type!");
@@ -63,17 +61,19 @@ const validateFile = (error, req, res, next) => {
   next();
 };
 
+// Remove white space to image file name
+const splitFileName = file => file.split(" ").join("-");
+
 /**
  *  Functions
  */
 // Single File Upload Function
 const singleFileUpload = async (req, res) => {
   try {
-    //console.log(req.file);
-
+    // Create public/images folder if not exist
     await makeDir("public/images");
 
-    const file = `${Date.now()}-${req.file.originalname}`;
+    const file = `${Date.now()}-${splitFileName(req.file.originalname)}`;
 
     // Process image with sharp js
     await sharp(req.file.buffer)
@@ -100,24 +100,23 @@ const singleFileUpload = async (req, res) => {
 // Multiple File Upload Funcstion
 const multipleFileUpload = async (req, res) => {
   try {
-    console.log(req.files);
-
-    let files = [];
-
+    // Create public/images folder if not exist
     await makeDir("public/images");
 
-    await req.files.map((file, index) => {
-      const imageFile = `./public/images/${Date.now()}-${file.originalname}`;
+    let files = [];
+    for (let [index, file] of req.files.entries()) {
+      const imageFile = `./public/images/${Date.now()}-${splitFileName(
+        file.originalname
+      )}`;
 
-      sharp(file.buffer)
+      await sharp(file.buffer)
         .resize(300)
         .background("white")
         .embed()
         .toFile(imageFile);
 
-      return (files[index] = imageFile);
-    });
-
+      files[index] = imageFile;
+    }
     //console.log(files);
 
     return res.json({ files });
@@ -146,7 +145,12 @@ app.post(
 );
 
 // route: dropzone single file upload
-app.post("/dropzone", singleUpload("file"), validateFile, singleFileUpload);
+app.post(
+  "/single-dropzone",
+  singleUpload("file"),
+  validateFile,
+  singleFileUpload
+);
 
 // route: dropzone multiple file upload
 app.post(
